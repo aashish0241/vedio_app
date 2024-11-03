@@ -1,41 +1,34 @@
+// index.js
 const express = require('express');
 const http = require('http');
-const socketIO = require('socket.io');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
-
-const PORT = process.env.PORT || 3000;
+const io = new Server(server);
 
 app.use(express.static('public'));
 
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+  console.log('A user connected:', socket.id);
 
-    // Automatically join the default room
-    const roomID = "default-room";
-    socket.join(roomID);
-    console.log(`User ${socket.id} joined the default room`);
+  // Handle signaling data for WebRTC
+  socket.on('offer', (data) => {
+    socket.broadcast.emit('offer', data);
+  });
 
-    // Notify other users in the room of the new connection
-    socket.broadcast.to(roomID).emit('user-connected', socket.id);
+  socket.on('answer', (data) => {
+    socket.broadcast.emit('answer', data);
+  });
 
-    // Handle signaling data for WebRTC
-    socket.on('signal', (data) => {
-        io.to(data.to).emit('signal', {
-            from: socket.id,
-            signal: data.signal,
-        });
-    });
+  socket.on('candidate', (data) => {
+    socket.broadcast.emit('candidate', data);
+  });
 
-    // Notify others when a user disconnects
-    socket.on('disconnect', () => {
-        console.log(`User ${socket.id} disconnected`);
-        socket.broadcast.to(roomID).emit('user-disconnected', socket.id);
-    });
+  socket.on('disconnect', () => {
+    console.log('A user disconnected:', socket.id);
+  });
 });
 
-server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

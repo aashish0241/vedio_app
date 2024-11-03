@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Video Call Room</title>
-</head>
-<body>
-    <h1>Video Call Room</h1>
-    <video id="localVideo" autoplay muted></video>
-    <div id="remoteVideos"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Video Call</title>
+  </head>
+  <body>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="remoteVideo" autoplay playsinline controls></video>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
