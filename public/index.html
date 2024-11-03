@@ -1,15 +1,159 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebRTC Video Call</title>
-  </head>
-  <body>
-    <video id="localVideo" autoplay playsinline muted></video>
-    <video id="remoteVideo" autoplay playsinline controls></video>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Chat</title>
+  <style>
+    /* General Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
-  </body>
+    /* Page Styling */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background-color: #ffffff;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 15px;
+      background-color: #4a90e2;
+      color: #ffffff;
+      font-size: 1.5em;
+    }
+
+    #chat {
+      padding: 10px 15px;
+      height: 400px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #chat p {
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 80%;
+    }
+
+    /* Message Styling */
+    .message {
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      font-size: 0.95em;
+    }
+
+    .message.user {
+      background-color: #4a90e2;
+      color: white;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .message.other {
+      background-color: #e1e1e1;
+      color: #333;
+      align-self: flex-start;
+    }
+
+    /* Input Area */
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      background-color: #ffffff;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      margin-right: 10px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    #messageInput:focus {
+      border-color: #4a90e2;
+    }
+
+    #sendButton {
+      padding: 10px 20px;
+      font-size: 1em;
+      color: #ffffff;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    #sendButton:hover {
+      background-color: #357abd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Real-Time Chat</h1>
+    <div id="chat"></div>
+    <div id="inputArea">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    // Display messages
+    socket.on('message', (data) => {
+      const messageElement = document.createElement('p');
+      messageElement.classList.add('message', data.id === socket.id ? 'user' : 'other');
+      messageElement.textContent = data.id === socket.id ? `You: ${data.text}` : `User ${data.id}: ${data.text}`;
+      chat.appendChild(messageElement);
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    // Send message
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit('message', message);
+        messageInput.value = '';
+      }
+    });
+
+    // Allow sending with Enter key
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+</body>
 </html>
