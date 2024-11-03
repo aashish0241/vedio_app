@@ -3,30 +3,29 @@ const localVideo = document.getElementById('localVideo');
 const remoteVideos = document.getElementById('remoteVideos');
 const peers = {};
 
-// Join a room
-const roomID = prompt("Enter room ID");
+// Automatically join the default room on page load
+const roomID = "default-room";
 socket.emit('join-room', roomID);
 
-// Access the user's video and audio
+// Access the user's video and audio automatically
 navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then((stream) => {
-        // Show the local video stream
+        // Display the local video stream
         localVideo.srcObject = stream;
 
-        // Notify others that a new user has joined the room
+        // Connect to new users joining the room
         socket.on('user-connected', (userId) => {
-            console.log(`User connected: ${userId}`);
+            console.log(`New user connected: ${userId}`);
             connectToNewUser(userId, stream);
         });
 
-        // Handle incoming signals from other users
+        // Receive signaling data from other users
         socket.on('signal', async (data) => {
             if (!peers[data.from]) {
-                // Initialize a peer connection if it doesn't already exist
+                // Create a peer connection if it doesn't exist
                 connectToNewUser(data.from, stream);
             }
 
-            // Apply the received signaling data (either offer or answer)
             const peerConnection = peers[data.from].peerConnection;
             if (data.signal.type === 'offer') {
                 await peerConnection.setRemoteDescription(data.signal);
@@ -40,9 +39,8 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             }
         });
 
-        // Notify when a user disconnects
+        // Handle when a user disconnects
         socket.on('user-disconnected', (userId) => {
-            console.log(`User disconnected: ${userId}`);
             if (peers[userId]) {
                 peers[userId].peerConnection.close();
                 peers[userId].videoElement.remove();

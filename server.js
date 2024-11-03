@@ -8,28 +8,31 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the "public" folder
 app.use(express.static('public'));
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // Join a room
-    socket.on('join-room', (roomID) => {
-        socket.join(roomID);
-        socket.broadcast.to(roomID).emit('user-connected', socket.id);
+    // Automatically join the default room
+    const roomID = "default-room";
+    socket.join(roomID);
+    console.log(`User ${socket.id} joined the default room`);
 
-        socket.on('disconnect', () => {
-            socket.broadcast.to(roomID).emit('user-disconnected', socket.id);
-        });
+    // Notify other users in the room of the new connection
+    socket.broadcast.to(roomID).emit('user-connected', socket.id);
 
-        // Signaling messages for WebRTC
-        socket.on('signal', (data) => {
-            io.to(data.to).emit('signal', {
-                from: socket.id,
-                signal: data.signal,
-            });
+    // Handle signaling data for WebRTC
+    socket.on('signal', (data) => {
+        io.to(data.to).emit('signal', {
+            from: socket.id,
+            signal: data.signal,
         });
+    });
+
+    // Notify others when a user disconnects
+    socket.on('disconnect', () => {
+        console.log(`User ${socket.id} disconnected`);
+        socket.broadcast.to(roomID).emit('user-disconnected', socket.id);
     });
 });
 
