@@ -1,0 +1,14 @@
+# Ignore log files
+*.log
+
+# Ignore environment files
+.env
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore all files in the 'dist' folder
+dist/
+
+# Ignore specific file
+secret_config.json
